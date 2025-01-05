@@ -1,0 +1,67 @@
+
+services:
+    server:
+        container_name: server
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: python server.py --num_rounds=10
+        environment:
+            FLASK_RUN_PORT: 6000
+            DOCKER_HOST_IP: host.docker.internal
+        volumes:
+            - .:/app
+            - /var/run/docker.sock:/var/run/docker.sock
+        ports:
+            - "6000:6000"
+            - "8265:8265"
+            - "8000:8000"
+        stop_signal: SIGINT
+
+    client1:
+        container_name: client1
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: python client.py --server_address=server:8080
+        deploy:
+            resources:
+                limits:
+                    cpus: "2"
+                    memory: "3g"
+        volumes:
+            - .:/app
+            - /var/run/docker.sock:/var/run/docker.sock
+        ports:
+            - "6001:6001"
+        depends_on:
+            - server
+        environment:
+            FLASK_RUN_PORT: 6001
+            container_name: client1
+            DOCKER_HOST_IP: host.docker.internal
+        stop_signal: SIGINT  
+
+    client2:
+        container_name: client2
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: python client.py --server_address=server:8080
+        deploy:
+            resources:
+                limits:
+                    cpus: "2"
+                    memory: "4g"
+        volumes:
+            - .:/app
+            - /var/run/docker.sock:/var/run/docker.sock
+        ports:
+            - "6002:6002"
+        depends_on:
+            - server
+        environment:
+            FLASK_RUN_PORT: 6002
+            container_name: client2
+            DOCKER_HOST_IP: host.docker.internal
+        stop_signal: SIGINT  
